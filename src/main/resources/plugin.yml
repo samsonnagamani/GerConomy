@@ -1,0 +1,8 @@
+name: GerConomy
+version: ${project.version}
+main: me.samsonnagamani.gerconomy.GerConomy
+api-version: 1.13
+author: Samson Nagamani <samson.nagamani@gmail.com>
+description: Spigot economy plugin
+depend: [Vault]
+softdepend: [Vault]
