@@ -16,7 +16,7 @@ Collections:
 
 **Note**: The player has to be in a team to use commands. Team-ing is a built-in Bukkit feature.
 
-To set up an account, run the command "/createaccount"
+To set up an account, just reconnect to the server.
 
 The default player and team balance is £50
 
