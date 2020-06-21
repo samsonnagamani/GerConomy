@@ -2,10 +2,11 @@ package me.samsonnagamani.gerconomy.Commands;
 
 import me.samsonnagamani.gerconomy.GerConomy;
 import me.samsonnagamani.gerconomy.MessageManager;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
+
+import java.util.UUID;
 
 public class PayCommand extends BukkitCommand {
     private GerConomy plugin = GerConomy.getPlugin();
@@ -21,7 +22,7 @@ public class PayCommand extends BukkitCommand {
     public boolean execute(CommandSender sender, String s, String[] args) {
         if (sender instanceof Player) {
             Player player = (Player) sender;
-            String uuid = player.getUniqueId().toString();
+            UUID uuid = player.getUniqueId();
 
             if (!player.hasPermission(this.getPermission())) {
                 MessageManager.playerBad(player, "You don't have permission.");
@@ -29,18 +30,18 @@ public class PayCommand extends BukkitCommand {
             }
 
             if (args.length == 2) {
-                Double amount = Double.parseDouble(args[0]);
+                double amount = Double.parseDouble(args[0]);
                 String playername = args[1];
-                Player receiver = Bukkit.getPlayer(playername);
+                Player receiver = plugin.getServer().getPlayer(playername);
 
                 if (receiver == null) {
-                    MessageManager.playerBad(player, "Sorry but we cant send your money to no one! " + playername + " does not exist!");
+                    MessageManager.playerBad(player, "Sorry but we cant send your money to no one! " + playername + " does not exist or is not online");
                     return true;
                 }
 
-                if (plugin.economyCore.withdrawPlayer(uuid, amount).transactionSuccess()) {
-                    plugin.economyCore.depositPlayer(uuid, amount);
-                }
+                plugin.economyCore.withdrawPlayer(uuid, amount);
+                plugin.economyCore.depositPlayer(receiver.getUniqueId(), amount);
+
 
             } else {
                 MessageManager.playerBad(player, this.usageMessage);

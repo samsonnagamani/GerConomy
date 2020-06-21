@@ -11,9 +11,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import java.util.Iterator;
-import java.util.List;
-
 public class TeamBalanceCommand extends BukkitCommand {
     private GerConomy plugin = GerConomy.getPlugin();
     private Scoreboard board = plugin.board;
@@ -43,19 +40,17 @@ public class TeamBalanceCommand extends BukkitCommand {
 
             String playerName = player.getName();
             String name = "";
-            Iterator<Team> teams = board.getTeams().iterator();
-            while (teams.hasNext()) {
-                Team team = teams.next();
+            for (Team team : board.getTeams()) {
                 if (team.getEntries().contains(playerName)) {
                     name = team.getName();
                 }
             }
 
-            double teamBalance;
+
             TeamManager teamManager = plugin.teamManagerHashMap.get(name);
             PlayerManager playerManager = plugin.playerManagerHashMap.get(player.getUniqueId());
-            if (playerManager.getBankaccount() == (teamManager.getBankaccount())) {
-                teamBalance = teamManager.getBalance();
+            if (playerManager.getTeam().equalsIgnoreCase(teamManager.getName())) {
+                double teamBalance = teamManager.getBalance();
 
                 if (teamBalance > 0) {
                     MessageManager.playerGood(player, "Your balance is " + ChatColor.GREEN + "$" + teamBalance);

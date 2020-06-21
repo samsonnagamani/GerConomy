@@ -1,9 +1,11 @@
 package me.samsonnagamani.gerconomy.Commands.Manager;
 
-import me.samsonnagamani.gerconomy.Commands.*;
+import me.samsonnagamani.gerconomy.Commands.BalanceCommand;
+import me.samsonnagamani.gerconomy.Commands.CreatePlayerAccountCommand;
+import me.samsonnagamani.gerconomy.Commands.PayCommand;
+import me.samsonnagamani.gerconomy.Commands.TeamBalanceCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandMap;
-import org.bukkit.command.defaults.BukkitCommand;
 
 import java.lang.reflect.Field;
 
@@ -21,7 +23,6 @@ public class CommandManager {
             commandMap.register("balance", new BalanceCommand());
             commandMap.register("teambalance", new TeamBalanceCommand());
             commandMap.register("pay", new PayCommand());
-            commandMap.register("test", new TestCommand());
         } catch (Exception e) {
             e.printStackTrace();
         }

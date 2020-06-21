@@ -11,8 +11,6 @@ import org.bson.conversions.Bson;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -37,15 +35,17 @@ public class MongoConnect {
     }
 
     public void loadPlayerData(Player player) {
-        UUID uuid = player.getUniqueId();
+        // If player has joined server before load their data
+        if (player.hasPlayedBefore()) {
+            UUID uuid = player.getUniqueId();
 
-        if (plugin.economyCore.hasAccount(uuid.toString())) {
-            Document playerdata = (Document) plugin.mongoConnect.getPlayerDataCollection().find(new Document("uuid", uuid.toString())).first();
-            double balance = playerdata.getDouble("balance");
-            double bankaccount = playerdata.getDouble("bank_account");
+            if (plugin.economyCore.hasAccount(uuid.toString())) {
+                Document playerdata = (Document) plugin.mongoConnect.getPlayerDataCollection().find(new Document("uuid", uuid.toString())).first();
+                double balance = playerdata.getDouble("balance");
 
-            plugin.playerManagerHashMap.put(uuid, new PlayerManager(uuid.toString(), balance, bankaccount));
-            MessageManager.playerInfo(player, "Player Info Loaded!");
+                plugin.playerManagerHashMap.put(uuid, new PlayerManager(uuid.toString(), balance));
+                MessageManager.playerInfo(player, "Player Info Loaded!");
+            }
         } else {
             addNewPlayer(player);
         }
@@ -53,32 +53,33 @@ public class MongoConnect {
 
     public void addNewPlayer(Player player) {
         UUID uuid = player.getUniqueId();
-        if (!plugin.economyCore.hasAccount(uuid.toString())) {
+
+        if (plugin.getServer().getPlayer(uuid) != null) {
             plugin.economyCore.createPlayerAccount(uuid.toString());
-            configurePlayer(player);
-        } else {
-            MessageManager.playerBad(player, "Your account already exists!");
         }
+
+        // TODO add a sensible comment
+        configurePlayer(player);
+
     }
 
     public void configurePlayer(Player player) {
         TeamManager teamManager;
-        PlayerManager playerManager = plugin.playerManagerHashMap.get(player.getUniqueId());
+        PlayerManager playerManager;
         String playerName = player.getName();
         String name = "";
-        Iterator<Team> teams = board.getTeams().iterator();
-        while (teams.hasNext()) {
-            Team team = teams.next();
+        for (Team team : board.getTeams()) {
             if (team.getEntries().contains(playerName)) {
                 name = team.getName();
             }
         }
 
         if (plugin.teamManagerHashMap.containsKey(name) && plugin.economyCore.hasAccount(player.getUniqueId().toString())) {
+            playerManager = plugin.playerManagerHashMap.get(player.getUniqueId());
             teamManager = plugin.teamManagerHashMap.get(name);
             if (playerManager.getTeam().equals(teamManager.getName())) {
-                playerManager.setBankaccount(teamManager.getBankaccount());
-                MessageManager.playerGood(player, player.getName() + " bank account is set");
+                playerManager.setTeam(teamManager.getName());
+                MessageManager.playerGood(player, player.getName() + " team account is set");
             }
         } else {
             MessageManager.playerBad(player, "You do not have an account " + ChatColor.WHITE + "or " + ChatColor.RED + "You are not in a team");
@@ -86,15 +87,13 @@ public class MongoConnect {
     }
 
     public void addTeamsToDb() {
-        Iterator<Team> teams = board.getTeams().iterator();
-        while(teams.hasNext()) {
-            Team team = teams.next();
+        for (Team team : board.getTeams()) {
             String name = team.getName();
             Set<String> players = team.getEntries();
             List<String> playersuuid = new ArrayList<>();
             for (String playername : players) {
                 Player player = (Player) Bukkit.getPlayer(playername);
-                String uuid =  player.getUniqueId().toString();
+                String uuid = player.getUniqueId().toString();
                 playersuuid.add(uuid);
             }
 
@@ -107,14 +106,9 @@ public class MongoConnect {
 
     public void addNewTeam(String name) {
         List<String> playeruuids = new ArrayList<>(board.getTeam(name).getEntries());
-        TeamManager teamManager = plugin.teamManagerHashMap.get(name);
-        if (!plugin.economyCore.hasTeamAccount(name) || teamManager.getBankaccount() == 0) {
-            // Generate random bank account number
-            Random rnd = new Random();
-            Double newBankAccount = 10000000d + rnd.nextInt(90000000);
-
+        if (!plugin.economyCore.hasTeamAccount(name)) {
             // Default starting balance for team account is 50
-            plugin.teamManagerHashMap.put(name, new TeamManager(name, 50, newBankAccount, playeruuids));
+            plugin.teamManagerHashMap.put(name, new TeamManager(name, 50, playeruuids));
             MessageManager.consoleGood("Team " + name + " has been initialised");
         } else {
             MessageManager.consoleInfo("Team " + name + " already exists");
@@ -122,24 +116,21 @@ public class MongoConnect {
     }
 
     public void loadTeamData() {
-        Iterator teamnames = plugin.teamManager.getTeamNames().iterator();
-        while (teamnames.hasNext()) {
-            String teamname = (String) teamnames.next();
+        for (String teamname : plugin.teamManager.getTeamNames()) {
             Team team = board.getTeam(teamname);
             if (plugin.economyCore.hasTeamAccount(teamname)) {
                 Document teamdata = (Document) plugin.mongoConnect.getTeamDataCollection().find(new Document("name", teamname)).first();
                 double balance = teamdata.getDouble("balance");
-                double bankaccount = teamdata.getDouble("bank_account");
 
                 List<String> teamPlayerUuids = new ArrayList<>();
 
-                Iterator players = team.getEntries().iterator();
-                while (players.hasNext()) {
-                    Player teamPlayer = plugin.getServer().getPlayer((String) players.next());
+                for (String s : team.getEntries()) {
+                    Player teamPlayer = plugin.getServer().getPlayer(s);
                     teamPlayerUuids.add(teamPlayer.getUniqueId().toString());
                 }
 
-                plugin.teamManagerHashMap.put(teamname, new TeamManager(teamname, balance, bankaccount, teamPlayerUuids));
+                plugin.teamManagerHashMap.put(teamname, new TeamManager(teamname, balance, teamPlayerUuids));
+                MessageManager.consoleInfo("Team info loaded");
 
             } else {
                 addNewTeam(team.getName());

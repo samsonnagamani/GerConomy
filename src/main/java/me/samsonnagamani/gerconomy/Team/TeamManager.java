@@ -10,7 +10,6 @@ import java.util.*;
 public class TeamManager {
     private String name;
     private double balance;
-    private double bankaccount;
     private List<String> playersuuid;
     private GerConomy plugin = GerConomy.getPlugin();
     private MongoConnect mongoConnect = plugin.mongoConnect;
@@ -18,24 +17,21 @@ public class TeamManager {
 
     public TeamManager() {}
 
-    public TeamManager(String name, double balance, double bankaccount, List<String> playersuuid) {
+    public TeamManager(String name, double balance, List<String> playersuuid) {
         this.name = name;
         this.balance = balance;
-        this.bankaccount = bankaccount;
         this.playersuuid = playersuuid;
 
         setName(name);
-        setBankaccount(bankaccount);
         setBalance(balance);
 
         
     }
 
     public List<String> getTeamNames() {
-        Iterator<Document> teams = mongoConnect.getTeamDataCollection().find().into(new ArrayList<Document>()).iterator();
-        List<String> teamnames = new ArrayList<String>();
-        while(teams.hasNext()) {
-            Document team = teams.next();
+        List<Document> teams = (List<Document>) mongoConnect.getTeamDataCollection().find().into(new ArrayList<Document>());
+        List<String> teamnames = new ArrayList<>();
+        for (Document team : teams) {
             String name = (String) team.get("name");
             teamnames.add(name);
         }
@@ -43,33 +39,16 @@ public class TeamManager {
     }
 
     public boolean hasAccount(String name) {
-        if (hasBankaccount(name) && hasBalance(name) && hasName(name)) {
-            return true;
-        }
-        return false;
+        return hasBalance(name) && hasName(name);
     }
 
-    public boolean hasBankaccount(String name) {
-        if (mongoConnect.getTeamDataDocument("bank_account", name) == null) {
-            return false;
-        }
-        return true;
-    }
 
     public boolean hasBalance(String name) {
-        if (mongoConnect.getTeamDataDocument("balance", name) == null) {
-            return false;
-        }
-
-        return true;
+        return mongoConnect.getTeamDataDocument("balance", name) != null;
     }
 
     public boolean hasName(String name) {
-        if (mongoConnect.getTeamDataDocument("name", name) == null) {
-            return false;
-        }
-
-        return true;
+        return mongoConnect.getTeamDataDocument("name", name) != null;
     }
 
     public void setName(String name) {
@@ -88,15 +67,6 @@ public class TeamManager {
     public void setBalance(double balance) {
         this.balance = balance;
         mongoConnect.setTeamDataDocument(balance, "balance", name);
-    }
-
-    public double getBankaccount() {
-        return (double) mongoConnect.getTeamDataDocument("bank_account", name);
-    }
-
-    public void setBankaccount(double bankaccount) {
-        this.bankaccount = bankaccount;
-        mongoConnect.setTeamDataDocument(bankaccount, "bank_account", name);
     }
 
     public List<String> getPlayerUuids() {

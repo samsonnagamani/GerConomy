@@ -33,9 +33,10 @@ public class BalanceCommand extends BukkitCommand {
                 return true;
             }
 
-            double balance = plugin.economyCore.getBalance(player.getUniqueId().toString());
+            double balance = plugin.economyCore.getBalance(player.getUniqueId());
+
             if (balance > 0) {
-                MessageManager.playerGood(player, "Your balance is " + ChatColor.GREEN + "$" + balance);
+                MessageManager.playerGood(player, "Your balance is " + ChatColor.GREEN + "£" + balance);
             } else {
                 MessageManager.playerBad(player, "You do not have an account");
             }

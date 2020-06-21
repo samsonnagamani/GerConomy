@@ -6,7 +6,8 @@ Build the source code with Maven:
 <code>$mvn install</code>
 
 ### Introduction | Usage
-This plugin is an economy plugin which **requires** Vault \(another plugin\)
+
+**Note: This is a standalone economy plugin and is no longer compatible with Vault**
 
 **MongoDB**  
 Database Name: minecraft_server  
@@ -16,7 +17,7 @@ Collections:
 
 **Note**: The player has to be in a team to use commands. Team-ing is a built-in Bukkit feature.
 
-To set up an account, run the command "/createaccount"
+Accounts will automatically be created when players first join, or use the /createaccount command
 
 The default player and team balance is £50
 
